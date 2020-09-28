@@ -94,21 +94,19 @@ const formatResponse = (response, googleBody) => {
 
         // gestione immagini: diventano una basicCard e hanno priorità sulla basicCard creata dai pulsanti
         if (capabilities.includes('actions.capability.SCREEN_OUTPUT')) {
-            const images = response.output.generic.find((g) => g.response_type === 'image');
-            if (images) {
-                for (const img of images) {
-                    if (basicCard < maxBasicCard) {
-                        basicCard++;
-                        richResponse.items.push({
-                            basicCard: {
-                                title: img.title,
-                                formattedText: img.description,
-                                image: {
-                                    url: img.source,
-                                }
-                            },
-                        });
-                    }
+            const img = response.output.generic.find((g) => g.response_type === 'image');
+            if (img) {
+                if (basicCard < maxBasicCard) {
+                    basicCard++;
+                    richResponse.items.push({
+                        basicCard: {
+                            title: img.title,
+                            formattedText: img.description,
+                            image: {
+                                url: img.source,
+                            }
+                        },
+                    });
                 }
             }
         }
