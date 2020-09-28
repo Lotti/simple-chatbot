@@ -1,0 +1,214 @@
+@import 'Palette.less';
+
+/*
+.speech-bubble {
+  position: relative;
+  border-radius: 10px;
+}
+
+.speech-bubble.ping {
+  background: @dark;
+}
+
+.speech-bubble.pong {
+  background: @border-grey;
+}
+
+.speech-bubble.ping:after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border: 20px solid transparent;
+  border-left-color: @dark;
+  border-right: 0;
+  border-top: 0;
+  margin-top: -10px;
+  margin-right: -20px;
+}
+
+.speech-bubble.pong:after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border: 20px solid transparent;
+  border-right-color: @border-grey;
+  border-left: 0;
+  border-top: 0;
+  margin-top: -10px;
+  margin-left: -20px;
+}
+*/
+
+.messages {
+  text-align: center;
+
+  .message {
+    border: 0;
+    text-align: left;
+    width: 95%;
+    padding: 10px;
+    border-radius: 10px;
+
+    .ant-list-item-meta-title, .ant-list-item-meta-description {
+      color: @black;
+      font-size: @textSize;
+    }
+
+    &.user {
+      border: 1.5px solid @dark;
+      margin: 0 10px 10px 5%;
+      background-color: @red-darkest-alpha;
+
+      .ant-list-item-meta {
+        flex-flow: row-reverse nowrap;
+
+        .ant-list-item-meta-avatar {
+          margin-left: 16px;
+          margin-right: 0;
+
+          .ant-avatar {
+            font-weight: bold;
+            background-color: @dark;
+            border: 1.5px solid @white;
+            vertical-align: middle;
+            color: @white;
+          }
+        }
+
+        .ant-list-item-meta-title, .ant-list-item-meta-description {
+          color: @black;
+          text-align: right;
+        }
+      }
+    }
+
+    &.bot {
+      border: 1.5px solid @border-grey;
+      margin: 0 5% 10px 0;
+      background-color: @light-grey;
+
+      .ant-avatar {
+        font-weight: bold;
+        background-color: @white;
+        border: 1.5px solid @dark;
+      }
+
+      .ant-list-item-action {
+        margin-left: calc(40px + 16px);
+        display: flex;
+        flex-flow: row wrap;
+        justify-content: flex-start;
+        align-content: flex-start;
+
+        & > li {
+          padding: 10px;
+          height: auto;
+
+          .fixed-answer {
+            font-size: @textSize;
+            font-weight: bold;
+            padding: 5px 10px;
+            margin-bottom: 5px;
+            height: 35px;
+            font-family: IBMPlexSansLight, Helvetica, Verdana, sans-serif;
+            color: @white-alpha;
+            cursor: pointer;
+            background-color: @darkest;
+            border-color: @darkest;
+
+            &[disabled] {
+              cursor: default;
+              background-color: @light-grey;
+              border-color: #d9d9d9;
+              color: @grey;
+            }
+
+            &:hover:not[disabled] {
+              color: @white;
+              background-color: @dark;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.feedbackBox {
+
+  .ant-divider {
+    margin: 5px 0;
+  }
+
+  .description {
+    font-size: @smallerTextSize;
+  }
+
+  .feedbackButton {
+    margin: 10px 25px 0;
+    color: @black;
+
+    .fa-thumbs-up {
+      margin: 0 5px 0 0;
+    }
+
+    .fa-thumbs-down {
+      margin: 0 0 0 5px;
+    }
+
+    &:hover {
+      color: @white;
+      border-color: @white;
+      box-shadow: -1px 0 0 0 @white;
+
+      &.positive {
+        background: @positive-alpha;
+        border-color: @positive;
+      }
+
+      &.negative {
+        background: @negative-alpha;
+        border-color: @negative;
+      }
+    }
+
+    &.checked {
+      color: @white;
+      border-color: @white;
+      box-shadow: -1px 0 0 0 @white;
+
+      &.positive {
+        background: @positive;
+        border-color: @positive;
+      }
+
+      &.negative {
+        background: @negative;
+        border-color: @negative;
+      }
+    }
+  }
+
+  .feedbackText.chatInputArea {
+    height: 65px;
+    background: transparent;
+
+    .chatInput {
+      font-size: @feedbackTextSize;
+    }
+
+    .sendButton {
+      font-size: @feedbackTextSize;
+    }
+  }
+}
+
+.imgPreview {
+  max-height: 200px;
+}

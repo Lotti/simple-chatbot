@@ -1,0 +1,19 @@
+{
+  "restartable": "rs",
+  "ignore": [
+    ".git/",
+    "__test__/",
+    "client/",
+    "coverage/",
+    "logs/",
+    "node_modules/",
+    "node_modules/**/node_modules",
+    "output/",
+    "public/"
+  ],
+  "verbose": true,
+  "execMap": {
+    "js": "node --inspect=3001  --throw-deprecation --trace-warnings"
+  },
+  "ext": "js,json,yaml"
+}

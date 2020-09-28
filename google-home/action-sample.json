@@ -1,0 +1,71 @@
+{
+  "actions": [
+    {
+      "name": "MAIN",
+      "intent": {
+        "name": "actions.intent.MAIN"
+      },
+      "fulfillment": {
+        "conversationName": "ExampleAction"
+      }
+    },
+    {
+      "name": "BUY",
+      "intent": {
+        "name": "com.example.ExampleAction.BUY",
+        "parameters": [{
+          "name": "color",
+          "type": "org.schema.type.Color"
+        }],
+        "trigger": {
+          "queryPatterns": [
+            "find some $org.schema.type.Color:color sneakers",
+            "buy some blue suede shoes",
+            "get running shoes"
+          ]
+        }
+      },
+      "fulfillment": {
+        "conversationName": "ExampleAction"
+      }
+    },
+    {
+      "name": "ORDER_STATUS",
+      "intent": {
+        "name": "com.example.ExampleAction.ORDER_STATUS",
+        "trigger": {
+          "queryPatterns": [
+            "check on my order",
+            "see order updates",
+            "check where my order is"
+          ]
+        }
+      },
+      "fulfillment": {
+        "conversationName": "ExampleAction"
+      }
+    },
+    {
+      "name": "DAILY_DEALS",
+      "intent": {
+        "name": "com.example.ExampleAction.DAILY_DEALS",
+        "trigger": {
+          "queryPatterns": [
+            "hear about daily deals",
+            "buying some daily deals",
+            "get today's deals"
+          ]
+        }
+      },
+      "fulfillment": {
+        "conversationName": "ExampleAction"
+      }
+    }
+  ],
+  "conversations": {
+    "ExampleAction": {
+      "name": "ExampleAction",
+      "url": "https://www.example.com/ExampleAction"
+    }
+  }
+}

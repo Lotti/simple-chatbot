@@ -1,0 +1,49 @@
+{
+  "name": "simple-chatbot",
+  "version": "1.0.0",
+  "description": "simple chatbot",
+  "private": true,
+  "author": "Valerio Riva <valerio.riva@it.ibm.com>",
+  "license": "MIT",
+  "main": "index.js",
+  "repository": "https://github.com/Lotti/simple-chatbot.git",
+  "engineStrict": true,
+  "engines": {
+    "node": ">=8.11.x",
+    "npm": ">=5.6.x"
+  },
+  "scripts": {
+    "install-client": "(cd ./client && npm install)",
+    "start-client": "(cd ./client && npm start)",
+    "build-client": "(cd ./client && npm run build)",
+    "start": "node main.js",
+    "watch": "nodemon -r dotenv/config main.js",
+    "install-all": "npm install && npm run install-client",
+    "lint": "eslint --fix .",
+    "pretest": "npm run lint",
+    "push": "bx cf push -f manifest.yaml --vars-file manifest-params.yaml",
+    "push-prod": "bx cf push -f manifest.yaml --vars-file manifest-params-prod.yaml",
+    "deploy": "npm run build-client && npm run push"
+  },
+  "dependencies": {
+    "alexa-verifier": "^2.0.1",
+    "bagpipes": "^0.2.2",
+    "body-parser": "^1.19.0",
+    "chance": "^1.1.7",
+    "compression": "^1.7.4",
+    "dotenv": "^8.2.0",
+    "errorhandler": "^1.5.1",
+    "express": "^4.17.1",
+    "express-ipfilter": "^1.1.2",
+    "ibm-watson": "^5.7.0",
+    "js-yaml": "^3.14.0",
+    "jsonwebtoken": "^8.5.1",
+    "jszip": "^3.5.0",
+    "log4js": "^6.3.0",
+    "oas-tools": "^2.1.8"
+  },
+  "devDependencies": {
+    "eslint": "^7.9.0",
+    "nodemon": "^2.0.4"
+  }
+}

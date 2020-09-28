@@ -1,0 +1,56 @@
+{
+  "name": "simple-chatbot-ui",
+  "version": "1.0.0",
+  "description": "simple chatbot",
+  "private": true,
+  "author": "Valerio Riva <valerio.riva@it.ibm.com>",
+  "license": "MIT",
+  "proxy": "http://127.0.0.1:3000",
+  "scripts": {
+    "analyze": "source-map-explorer build/static/js/main.*",
+    "start": "REDUX_LOGGER=true craco start",
+    "build": "craco build",
+    "test": "craco test",
+    "eject": "craco eject"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^4.2.2",
+    "@fortawesome/fontawesome-svg-core": "^1.2.30",
+    "@fortawesome/free-solid-svg-icons": "^5.14.0",
+    "@fortawesome/react-fontawesome": "^0.1.11",
+    "antd": "^4.6.5",
+    "dayjs": "^1.8.36",
+    "default-passive-events": "^2.0.0",
+    "es6-promise": "^4.2.8",
+    "immutable": "^4.0.0-rc.12",
+    "isomorphic-fetch": "^2.2.1",
+    "prop-types": "^15.7.2",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-redux": "^7.2.1",
+    "react-refresh": "^0.8.3",
+    "react-router": "^5.2.0",
+    "react-router-dom": "^5.2.0",
+    "redux": "^4.0.5",
+    "redux-logger": "^3.0.6",
+    "redux-thunk": "^2.3.0",
+    "serve": "^11.3.2",
+    "url-search-params-polyfill": "^8.1.0",
+    "uuid": "^8.3.0"
+  },
+  "devDependencies": {
+    "@craco/craco": "^5.6.4",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.4.2",
+    "babel-cli": "^6.26.0",
+    "babel-plugin-import": "^1.13.0",
+    "craco-less": "^1.17.0",
+    "react-scripts": "^3.4.3",
+    "source-map-explorer": "^2.5.0"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
+}

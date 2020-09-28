@@ -1,0 +1,193 @@
+openapi: 3.0.1
+info:
+  title: simple-chatbot
+  license:
+    name: MIT
+  version: 1.0.0
+servers:
+  - url: '/api'
+paths:
+  /health:
+    get:
+      tags:
+        - health
+      summary: health-check api
+      x-swagger-router-controller: health
+      operationId: health
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Healthcheck'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /message:
+    post:
+      tags:
+        - message
+      summary: webhook for web chat
+      x-swagger-router-controller: message
+      operationId: message
+      requestBody:
+        x-name: body
+        description: webchat body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/webChatHookModel'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /google-assistant:
+    post:
+      tags:
+        - google-assistant
+      summary: webhook for google assistant
+      x-swagger-router-controller: google
+      operationId: google
+      requestBody:
+        x-name: body
+        description: google assistant body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/googleAssistantModel'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/googleSuccess'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /alexa:
+    post:
+      tags:
+        - alexa
+      summary: webhook for alexa
+      x-swagger-router-controller: alexa
+      operationId: alexa
+      requestBody:
+        x-name: body
+        description: alexa body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/alexaModel'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/googleSuccess'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+
+  schemas:
+    Healthcheck:
+      required:
+        - status
+      properties:
+        status:
+          type: string
+
+    Error:
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: boolean
+        message:
+          type: string
+
+    Response:
+      required:
+        - output
+      properties:
+        output:
+          type: object
+
+    webChatHookModel:
+      required:
+        - text
+        - userId
+      properties:
+        text:
+          type: string
+        userId:
+          type: string
+        suggestion_id:
+          type: string
+        intents:
+          type: array
+          items:
+            type: object
+        entities:
+          type: array
+          items:
+            type: object
+        context:
+          type: object
+      example:
+        text: ciao
+        userId: "12345"
+
+    googleAssistantModel:
+      type: object
+
+    googleSuccess:
+      type: object
+
+    alexaModel:
+      type: object
+
+    alexaSuccess:
+      required:
+        - version
+        - response
+      properties:
+        version:
+          type: string
+        sessionAttributes:
+          type: object
+        response:
+          type: object

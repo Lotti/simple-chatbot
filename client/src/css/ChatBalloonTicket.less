@@ -1,0 +1,36 @@
+@import 'Palette.less';
+
+.ant-modal {
+  top: 30%;
+
+  .ant-modal-content {
+    border: 3px solid @dark;
+  }
+}
+
+.emailFormRow {
+  line-height: 28px;
+  font-size: @feedbackTextSize;
+  margin-bottom: 10px;
+}
+
+.requiredField {
+  color: @dark;
+}
+
+.ant-confirm-warning .ant-confirm-body > .anticon, .ant-confirm-confirm .ant-confirm-body > .anticon {
+  color: @dark;
+  margin-right: 5px;
+}
+
+.ant-confirm-btns {
+  text-align: right;
+
+  .ant-btn {
+    margin: 0 5px;
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+}

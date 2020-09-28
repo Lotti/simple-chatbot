@@ -1,0 +1,35 @@
+# Logs
+logs/
+*.log
+
+# Docker.env
+Docker.env
+
+# Dependencies
+node_modules/
+
+# Coverage
+coverage/
+
+# Transpiled files
+/client/build/
+/public
+
+# VS Code
+.vscode
+!.vscode/tasks.js
+
+# JetBrains IDEs
+.idea/
+
+# Optional eslint cache
+.eslintcache
+
+# Misc
+.DS_Store
+
+/output/*
+!output/.gitkeep
+
+/.env
+/manifest-params*.yaml
