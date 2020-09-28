@@ -18,7 +18,7 @@ const formatResponse = (response, alexaBody) => {
 
     let text = '';
     let title = undefined;
-    let image = undefined;
+    let card = undefined;
     let cards = 0;
     let maxCards = 1;
 
@@ -26,32 +26,29 @@ const formatResponse = (response, alexaBody) => {
     const suggestion = response.output.generic.find((g) => g.response_type === 'suggestion');
     if (suggestion) {
         text = suggestion.title.trim();
-
+        const buttons = suggestion.suggestions.map((o) => o.label.trim()).join(', ').trim();
         if (capabilities.includes('Display')) {
-            /*
-            richResponse.suggestions = suggestion.suggestions.map((o) => {
-                storeButtonInContext(conversationToken, o);
-                return {
-                    title: o.label
-                };
-            });
-            */
+            card = {
+                title: suggestion.title.trim(),
+                text: buttons,
+            };
         } else {
-            text+= '\n'+suggestion.suggestions.map((o) => o.label.trim()).join(', ').trim();
+            text+= '\n'+buttons;
         }
     } else {
 
         // testi
-        const texts = response.output.generic.filter((g) => g.response_type === 'text').map((g) => g.text);
+        const texts = response.output.generic.filter((g) => g.response_type === 'text').map((g) => g.text.trim());
         for (const t of texts) {
-            text+= t;
+            text+= `${text.length > 0 ? '\n': ''}${t}`.trim();
         }
 
         // gestione immagini: trasformano una SimpleCard in StandardCard
         if (capabilities.includes('Display')) {
             const img = response.output.generic.find((g) => g.response_type === 'image');
             if (img) {
-                image = {
+                cards++;
+                card = {
                     title: img.title,
                     text: img.description,
                     url: img.source,
@@ -62,46 +59,24 @@ const formatResponse = (response, alexaBody) => {
         // pulsanti
         const option = response.output.generic.find((g) => g.response_type === 'option');
         if (option) {
-            let addTextButtons = true;
-            if (capabilities.includes('Display')) {
-                addTextButtons = false;
-                /*
-                richResponse.suggestions = option.options.map((o) => {
-                    storeButtonInContext(conversationToken, o);
-                    return {
-                        title: o.label
-                    };
-                });
-                */
-            }
-
             const title = option.title || '';
             const description = option.description || '';
-            const buttons = addTextButtons ? '\n' + option.options.map((o) => o.label).join(', ').trim() : '';
+            const buttons = option.options.map((o) => o.label.trim()).join(', ').trim();
 
             if (capabilities.includes('Display') && cards < maxCards) {
                 cards++;
-                /*
-                richResponse.items.push({
-                    basicCard: {
-                        title: title.trim(),
-                        formattedText: description.trim() + buttons,
-                    },
-                });
-                */
+                card = {
+                    title: title.trim(),
+                    text: description.trim() + '\n' + buttons,
+                };
             } else {
-                /*
-                richResponse.items.push({
-                    simpleResponse: {
-                        textToSpeech: title.trim() + buttons,
-                        displayText: (title + '\n' + description).trim(),
-                    },
-                });
-                */
+                text+= `${text.length > 0 ? '\n': ''}${title}`.trim();
+                text+= `${text.length > 0 ? '\n': ''}${description}`.trim();
+                text+= `${text.length > 0 ? '\n': ''}${buttons}`.trim();
             }
         }
 
-        // link out button
+        // link out button -> Not supported in Alexa?
         const connect_to_agent = response.output.generic.find((g) => g.response_type === 'connect_to_agent');
         if (connect_to_agent) {
             /*
@@ -113,7 +88,7 @@ const formatResponse = (response, alexaBody) => {
         }
     }
 
-    const expectUserResponse = Assistant.getContextVar(response, '_finalResponse', true);
+    const finalResponse = Assistant.getContextVar(response, '_finalResponse', false);
 
     if (text.length === 0) {
         text = 'Non sono presenti risposte di tipo testuali in questo nodo di dialogo';
@@ -129,13 +104,13 @@ const formatResponse = (response, alexaBody) => {
                 playBehavior: 'ENQUEUE',
             },
             card: {
-                type: image ? 'Standard' : 'Simple',
-                title: image ? image.title : title,
-                [image ? 'text' : 'content']: image ? image.text : text,
-                image: image ? {smallImageUrl: image.url, largeImageUrl: image.url,} : undefined,
+                type: card ? 'Standard' : 'Simple',
+                title: card ? card.title : title,
+                [card ? 'text' : 'content']: card ? card.text : text,
+                image: card && card.url ? {smallImageUrl: card.url, largeImageUrl: card.url,} : undefined,
             },
-            /*
             directives: [
+                /*
                 {
                     type: "Display.RenderTemplate",
                     template: {
@@ -158,18 +133,18 @@ const formatResponse = (response, alexaBody) => {
                         }
                     }
                 }
+                */
             ],
-            */
-            shouldEndSession: expectUserResponse,
+            shouldEndSession: finalResponse,
         }
     };
 
-    if (!expectUserResponse) {
+    if (!finalResponse) {
         output.response.reprompt = {
             outputSpeech: {
                 type: "PlainText",
                 text: text,
-                playBehavior: "REPLACE_ENQUEUED"
+                playBehavior: 'ENQUEUE',
             }
         };
     }
@@ -187,7 +162,10 @@ const formatInput = (body) => {
     let extra = {};
     let text = '';
 
-    if (request.type === 'IntentRequest' && request.intent.name === 'watson') {
+    if (request.type === 'SessionEndedRequest') {
+        return {userId, text, extra: {sessionEnd: true}};
+    } else if (request.type === 'IntentRequest' && request.intent.name === 'watson') {
+        log.fatal(request);
         if (request.intent && request.intent.slots &&
             request.intent.slots.speech && request.intent.slots.speech.value) {
             text = request.intent.slots.speech.value
@@ -206,10 +184,16 @@ module.exports.alexa = async (req, res) => {
         const signature = req.headers['signature'];
         await verifier(cert_url, signature, JSON.stringify(req.body));
         const input = formatInput(body);
-        log.info('Received message from %s: %s %j', input.userId, input.text || '(empty)', input.extra);
-        const r = await Assistant.sendMessage(input.userId, input.text, input.extra)
-        log.info('Answering with messages to %s: %j', input.userId, r);
-        res.send(formatResponse(r, body));
+        if (input.extra.sessionEnd) {
+            Assistant.deleteSessionId(input.userId);
+            log.info('Destroying sesssion of %s', input.userId);
+            res.send({});
+        } else {
+            log.info('Received message from %s: %s %j', input.userId, input.text || '(empty)', input.extra);
+            const r = await Assistant.sendMessage(input.userId, input.text, input.extra)
+            log.info('Answering with messages to %s: %j', input.userId, r);
+            res.send(formatResponse(r, body));
+        }
     } catch (error) {
         log.error('ERROR', error);
         res.status(500).send(error);

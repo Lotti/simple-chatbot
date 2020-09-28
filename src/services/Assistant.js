@@ -31,6 +31,12 @@ class Assistant {
         this.sessions = {};
     }
 
+    deleteSessionId(userId) {
+        if (this.sessions[userId]) {
+            delete this.sessions[userId];
+        }
+    }
+
     async getSessionId(userId) {
         const log = log4js.getLogger('Chat::getSessionId');
 
@@ -121,7 +127,7 @@ class Assistant {
             let text = 'Impossibile contattare Watson Assistant, provare di più tardi.';
             if (error.message === 'Invalid Session') {
                 text = 'Sessione scaduta';
-                delete this.sessions[userId];
+                this.deleteSessionId(userId);
                 log.fatal('invoking again sendmessage because session was expired');
                 const result = await this.sendMessage(userId, text, extra);
                 result.output.generic.unshift({response_type: 'text', text});

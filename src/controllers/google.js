@@ -65,7 +65,7 @@ const formatResponse = (response, googleBody) => {
         const charsPerSimpleText = 640;
 
         // testi
-        const texts = response.output.generic.filter((g) => g.response_type === 'text').map((g) => g.text);
+        const texts = response.output.generic.filter((g) => g.response_type === 'text').map((g) => g.text.trim());
         const simpleTexts = [];
         for (const t of texts) {
             if (simpleTexts.length === 0) {
@@ -127,7 +127,7 @@ const formatResponse = (response, googleBody) => {
 
             const title = option.title || '';
             const description = option.description || '';
-            const buttons = addTextButtons ? '\n' + option.options.map((o) => o.label).join(', ').trim() : '';
+            const buttons = addTextButtons ? '\n' + option.options.map((o) => o.label.trim()).join(', ').trim() : '';
 
             if (capabilities.includes('actions.capability.SCREEN_OUTPUT')
                 && simpleResponses >= maxSimpleResponses && basicCard < maxBasicCard) {
@@ -159,7 +159,7 @@ const formatResponse = (response, googleBody) => {
         }
     }
 
-    const expectUserResponse = Assistant.getContextVar(response, '_finalResponse', true);
+    const finalResponse = Assistant.getContextVar(response, '_finalResponse', false);
 
     if (richResponse.items.length === 0) {
         richResponse.items.push({
@@ -171,7 +171,7 @@ const formatResponse = (response, googleBody) => {
 
     const output = {
         conversationToken: jwt.sign(conversationToken, jwtSecret),
-        expectUserResponse,
+        expectUserResponse: !finalResponse,
     };
 
     if (output.expectUserResponse) {
