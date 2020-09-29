@@ -31,14 +31,32 @@ class Assistant {
         this.sessions = {};
     }
 
-    deleteSessionId(userId) {
+    /**
+     *
+     * @param {string} userId
+     */
+    async deleteSessionId(userId) {
+        const log = log4js.getLogger('Assistant::deleteSessionId');
         if (this.sessions[userId]) {
+            try {
+                await this.service.deleteSession({
+                    assistantId: process.env.ASSISTANT_ID, 
+                    sessionId: this.sessions[userId]
+                });
+            } catch (error) {
+                log.warn(error.message);
+            }
             delete this.sessions[userId];
         }
     }
 
+    /**
+     *
+     * @param {user} userId
+     * @returns {Promise<string>}
+     */
     async getSessionId(userId) {
-        const log = log4js.getLogger('Chat::getSessionId');
+        const log = log4js.getLogger('Assistant::getSessionId');
 
         if (this.sessions[userId]) {
             return this.sessions[userId];
@@ -57,6 +75,27 @@ class Assistant {
 
     /**
      *
+     * @param {AssistantV2.MessageResponse} response
+     * @returns {AssistantV2.MessageResponse}
+     * @private
+     */
+    _responseManipulation(response) {
+        const log = log4js.getLogger('Assistant::_responseManipulation');
+        if (response.context && response.context.skills && response.context.skills['main skill'].user_defined) {
+            const context = response.context.skills['main skill'].user_defined;
+            const intent = response.output.intents[0];
+            if (intent && context.ItsConfidenceTreshold && intent.confidence >= context.ItsConfidenceTreshold) {
+                context.ItsMisunderstandingCount = 0;
+                log.info('ItsMisunderstandingCount was reset');
+            }
+        }
+
+        return response;
+    }
+
+
+    /**
+     *
      * @param {string} userId
      * @param {string} text
      * @param {object} extra
@@ -67,7 +106,7 @@ class Assistant {
      * @returns {Promise<AssistantV2.MessageResponse|{output: {generic: [{response_type: string, text: string}]}}>}
      */
     async sendMessage(userId, text, extra) {
-        const log = log4js.getLogger('Chat::sendMessage');
+        const log = log4js.getLogger('Assistant::sendMessage');
 
         let restart = false;
         if (['restart','ricomincia','riavvia'].includes(text.toLowerCase().trim())) {
@@ -121,13 +160,13 @@ class Assistant {
                 };
             }
 
-            return (await this.service.message(options)).result;
+            return this._responseManipulation((await this.service.message(options)).result);
         } catch (error) {
             log.error(error);
             let text = 'Impossibile contattare Watson Assistant, provare di più tardi.';
             if (error.message === 'Invalid Session') {
                 text = 'Sessione scaduta';
-                this.deleteSessionId(userId);
+                await this.deleteSessionId(userId);
                 log.fatal('invoking again sendmessage because session was expired');
                 const result = await this.sendMessage(userId, text, extra);
                 result.output.generic.unshift({response_type: 'text', text});

@@ -192,9 +192,21 @@ const formatInput = (body) => {
 
     const intent = body.inputs[0].intent;
     const userId = body.conversation.conversationId;
-    const text = intent === 'actions.intent.MAIN' ? '' : body.inputs[0].rawInputs[0].query;
-
     let extra = {};
+    let text;
+
+    switch (intent) {
+        default:
+            text = body.inputs[0].rawInputs[0].query;
+            break;
+        case 'actions.intent.CANCEL':
+            text = '';
+            extra = {sessionEnd: true};
+        case 'actions.intent.MAIN':
+            text = '';
+            break;
+    }
+
     if (body.conversation.conversationToken) {
         const conversationToken = jwt.verify(body.conversation.conversationToken, jwtSecret);
         extra = {context: conversationToken.context};
@@ -208,146 +220,41 @@ const formatInput = (body) => {
     return {userId, text, extra};
 };
 
+const quitSession = () => {
+    return {
+        expectUserResponse: false,
+        finalResponse: {
+            richResponse: {
+                items: [{
+                    simpleResponse: {
+                        textToSpeech: 'Ok, alla prossima!'
+                    }
+                }]
+            }
+        }
+    };
+};
+
 module.exports.google = async (req, res) => {
     const params = req.swagger.params;
     const body = params.body.value;
 
     try {
         const input = formatInput(body);
-        log.info('Received message from %s: %s %j', input.userId, input.text || '(empty)', input.extra);
-        const r = await Assistant.sendMessage(input.userId, input.text, input.extra);
-        log.info('Answering with messages to %s: %j', input.userId, r);
-        res.setHeader('Content-Type', 'application/json');
-        res.setHeader('Google-Assistant-API-Version', 'v2');
-        res.send(formatResponse(r, body));
+        if (input.extra.sessionEnd) {
+            await Assistant.deleteSessionId(input.userId);
+            log.info('Destroying sesssion of %s', input.userId);
+            res.send(quitSession());
+        } else {
+            log.info('Received message from %s: %s %j', input.userId, input.text || '(empty)', input.extra);
+            const r = await Assistant.sendMessage(input.userId, input.text, input.extra);
+            log.info('Answering with messages to %s: %j', input.userId, r);
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Google-Assistant-API-Version', 'v2');
+            res.send(formatResponse(r, body));
+        }
     } catch (error) {
         log.error('ERROR', error);
         res.status(500).send(error);
     }
 };
-
-
-/*
-{
-  "user": {
-    "locale": "it-IT",
-    "lastSeen": "2020-09-14T15:19:12Z",
-    "userVerificationStatus": "VERIFIED"
-  },
-  "conversation": {
-    "conversationId": "ABwppHFsuAZKpHubv6FMpoOdILvZAOyPnFlCnduYV_I7WYJElJiNCYEmwtA563xRqo1GOT3s2FL9nxU2k8Xf",
-    "type": "NEW"
-  },
-  "inputs": [
-    {
-      "intent": "actions.intent.MAIN",
-      "rawInputs": [
-        {
-          "inputType": "VOICE",
-          "query": "Parla con la mia app di prova"
-        }
-      ]
-    }
-  ],
-  "surface": {
-    "capabilities": [
-      {
-        "name": "actions.capability.MEDIA_RESPONSE_AUDIO"
-      },
-      {
-        "name": "actions.capability.ACCOUNT_LINKING"
-      },
-      {
-        "name": "actions.capability.SCREEN_OUTPUT"
-      },
-      {
-        "name": "actions.capability.AUDIO_OUTPUT"
-      }
-    ]
-  },
-  "isInSandbox": true,
-  "availableSurfaces": [
-    {
-      "capabilities": [
-        {
-          "name": "actions.capability.WEB_BROWSER"
-        },
-        {
-          "name": "actions.capability.AUDIO_OUTPUT"
-        },
-        {
-          "name": "actions.capability.SCREEN_OUTPUT"
-        }
-      ]
-    }
-  ],
-  "requestType": "SIMULATOR"
-}
-*/
-
-
-/*
-{
-  "user": {
-    "locale": "it-IT",
-    "lastSeen": "2020-09-14T15:51:59Z",
-    "userVerificationStatus": "VERIFIED"
-  },
-  "conversation": {
-    "conversationId": "ABwppHFsuAZKpHubv6FMpoOdILvZAOyPnFlCnduYV_I7WYJElJiNCYEmwtA563xRqo1GOT3s2FL9nxU2k8Xf",
-    "type": "NEW"
-  },
-  "inputs": [
-    {
-      "intent": "actions.intent.TEXT",
-      "rawInputs": [
-        {
-          "inputType": "VOICE",
-          "query": "vorrei una pizza"
-        }
-      ],
-      "arguments": [
-        {
-          "name": "text",
-          "rawText": "vorrei una pizza",
-          "textValue": "vorrei una pizza"
-        }
-      ]
-    }
-  ],
-  "surface": {
-    "capabilities": [
-      {
-        "name": "actions.capability.AUDIO_OUTPUT"
-      },
-      {
-        "name": "actions.capability.SCREEN_OUTPUT"
-      },
-      {
-        "name": "actions.capability.ACCOUNT_LINKING"
-      },
-      {
-        "name": "actions.capability.MEDIA_RESPONSE_AUDIO"
-      }
-    ]
-  },
-  "isInSandbox": true,
-  "availableSurfaces": [
-    {
-      "capabilities": [
-        {
-          "name": "actions.capability.WEB_BROWSER"
-        },
-        {
-          "name": "actions.capability.SCREEN_OUTPUT"
-        },
-        {
-          "name": "actions.capability.AUDIO_OUTPUT"
-        }
-      ]
-    }
-  ],
-  "requestType": "SIMULATOR"
-}
-
-*/
