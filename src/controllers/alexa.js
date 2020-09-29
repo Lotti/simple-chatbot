@@ -1,8 +1,25 @@
 const log4js = require('log4js');
 const log = log4js.getLogger('alexa');
-
+const assert = require('assert').strict;
+const jwt = require('jsonwebtoken');
 const verifier = require('alexa-verifier');
 const Assistant = require('../services/Assistant');
+
+const {audioTemplate, displayTemplate} = require('../libraries/alexaTemplates');
+
+
+assert(process.env.JWT_SECRET, 'Missing environment var JWT_SECRET');
+const jwtSecret = process.env.JWT_SECRET;
+
+
+const storeButtonInContext = (conversationToken, option) => {
+    if (!conversationToken.buttons) {
+        conversationToken.buttons = {};
+    }
+    // salvo i pulsanti nel conversation token
+    conversationToken.buttons[option.label.toLowerCase()] = option.value;
+};
+
 
 const formatResponse = (response, alexaBody) => {
     let capabilities = [];
@@ -11,42 +28,47 @@ const formatResponse = (response, alexaBody) => {
         capabilities = Object.keys(alexaBody.context.System.device.supportedInterfaces);
     }
 
-    let context = {};
-    if (response.context && response.context.skills && response.context.skills['main skill']) {
-        context = response.context.skills['main skill'].user_defined;
-    }
+    const conversationToken = {
+        context: response.context.skills['main skill'].user_defined,
+    };
 
     let text = '';
-    let title = undefined;
-    let card = undefined;
+    let title = '', card = undefined;
+    let aplTitle = '', aplDescription = '', aplImage = '';
+    let aplButtons = [];
     let cards = 0;
-    let maxCards = 1;
+    const maxCards = 1;
 
     // disambiguazione: se c'è disambiguazione, ritorno solo questa
     const suggestion = response.output.generic.find((g) => g.response_type === 'suggestion');
     if (suggestion) {
-        text = suggestion.title.trim();
-        const buttons = suggestion.suggestions.map((o) => o.label.trim()).join(', ').trim();
-        if (capabilities.includes('Display')) {
-            card = {
-                title: suggestion.title.trim(),
-                text: buttons,
-            };
-        } else {
-            text+= '\n'+buttons;
-        }
+        aplTitle = suggestion.title;
+        aplButtons = suggestion.suggestions.map((o) => {
+            storeButtonInContext(conversationToken, o);
+            return o.label;
+        });
+        text = suggestion.title;
+        card = {
+            title: suggestion.title,
+            text: aplButtons.join(', '),
+        };
     } else {
-
         // testi
-        const texts = response.output.generic.filter((g) => g.response_type === 'text').map((g) => g.text.trim());
-        for (const t of texts) {
-            text+= `${text.length > 0 ? '\n': ''}${t}`.trim();
-        }
+        const texts = response.output.generic.filter((g) => g.response_type === 'text').map((g) => g.text);
+        texts.forEach((t, i) => {
+            if (i === 0) {
+                aplTitle = t;
+                title = t;
+            } else {
+                aplDescription+= '\n'+t;
+                text = '\n'+t;
+            }
+        });
 
         // gestione immagini: trasformano una SimpleCard in StandardCard
-        if (capabilities.includes('Display')) {
-            const img = response.output.generic.find((g) => g.response_type === 'image');
-            if (img) {
+        const img = response.output.generic.find((g) => g.response_type === 'image');
+        if (img) {
+            if (cards < maxCards) {
                 cards++;
                 card = {
                     title: img.title,
@@ -54,90 +76,84 @@ const formatResponse = (response, alexaBody) => {
                     url: img.source,
                 }
             }
+
+            aplImage = img.source;
+            if (title.length > 0) {
+                aplDescription = [aplTitle, aplDescription, img.description].join('\n');
+                aplTitle = img.title;
+                text = [title, text, img.description].join('\n');
+                title = img.title;
+            } else {
+                aplDescription = [aplDescription, img.description].join('\n');
+                aplTitle = img.title;
+                text = [text, img.description].join('\n');
+                title = img.title;
+            }
         }
 
         // pulsanti
         const option = response.output.generic.find((g) => g.response_type === 'option');
         if (option) {
-            const title = option.title || '';
-            const description = option.description || '';
-            const buttons = option.options.map((o) => o.label.trim()).join(', ').trim();
+            aplButtons = option.options.map((o) => {
+                storeButtonInContext(conversationToken, o);
+                return o.label;
+            });
 
-            if (capabilities.includes('Display') && cards < maxCards) {
+            if (cards < maxCards) {
                 cards++;
                 card = {
-                    title: title.trim(),
-                    text: description.trim() + '\n' + buttons,
+                    title: option.title,
+                    text: option.description + '\n' + aplButtons.join(', '),
                 };
-            } else {
-                text+= `${text.length > 0 ? '\n': ''}${title}`.trim();
-                text+= `${text.length > 0 ? '\n': ''}${description}`.trim();
-                text+= `${text.length > 0 ? '\n': ''}${buttons}`.trim();
             }
-        }
 
-        // link out button -> Not supported in Alexa?
-        const connect_to_agent = response.output.generic.find((g) => g.response_type === 'connect_to_agent');
-        if (connect_to_agent) {
-            /*
-            richResponse.linkOutSuggestion = {
-                destinationName: connect_to_agent.message_to_human_agent,
-                url: Assistant.getContextVar(response, '_externalUrl', 'https://assistant.google.com/'),
-            };
-            */
+            if (title.length > 0) {
+                aplDescription = [aplDescription, option.title, option.description].join('\n');
+                text = [text, option.title, option.description, aplButtons.join(', ')].join('\n');
+            } else {
+                aplDescription = [aplDescription, option.description].join('\n');
+                aplTitle = option.title;
+                text = [text, option.description, aplButtons.join(', ')].join('\n');
+                title = option.title;
+            }
         }
     }
 
     const finalResponse = Assistant.getContextVar(response, '_finalResponse', false);
 
-    if (text.length === 0) {
+    if (title.length === 0 && text.length === 0) {
         text = 'Non sono presenti risposte di tipo testuali in questo nodo di dialogo';
     }
 
     const output = {
         version: '1.0',
-        sessionAttributes: context,
+        sessionAttributes: {
+            conversationToken: jwt.sign(conversationToken, jwtSecret),
+        },
         response: {
-            outputSpeech: {
-                type: 'PlainText',
-                text: text,
-                playBehavior: 'ENQUEUE',
-            },
-            card: {
-                type: card ? 'Standard' : 'Simple',
-                title: card ? card.title : title,
-                [card ? 'text' : 'content']: card ? card.text : text,
-                image: card && card.url ? {smallImageUrl: card.url, largeImageUrl: card.url,} : undefined,
-            },
-            directives: [
-                /*
-                {
-                    type: "Display.RenderTemplate",
-                    template: {
-                        type: "BodyTemplate1",
-                        token: "horoscope",
-                        title: "This is your horoscope",
-                        image: {
-                            contentDescription: "Aquarius",
-                            sources: [
-                                {
-                                    url: "https://example.com/resources/card-images/aquarius-symbol.png"
-                                }
-                            ]
-                        },
-                        textContent: {
-                            primaryText: {
-                                type: "RichText",
-                                text: "You are going to have a <b>good day</b> today."
-                            }
-                        }
-                    }
-                }
-                */
-            ],
-            shouldEndSession: finalResponse,
-        }
+            shouldEndSession: finalResponse
+        },
     };
+    if (capabilities.includes('Alexa.Presentation.APL')) {
+        output.response.directives = [
+            displayTemplate(aplTitle, aplDescription, aplButtons, aplImage),
+            audioTemplate(aplTitle, aplDescription, aplButtons)
+        ];
+    } else {
+        output.response.outputSpeech = {
+            type: 'PlainText',
+            text: title + '\n' + text,
+            playBehavior: 'ENQUEUE',
+        };
+        if (card) {
+            output.response.card = {
+                type: 'Standard',
+                title: card.title,
+                text: card.text,
+                image: card.url ? {smallImageUrl: card.url, largeImageUrl: card.url} : undefined,
+            };
+        }
+    }
 
     if (!finalResponse) {
         output.response.reprompt = {
@@ -158,17 +174,30 @@ const formatInput = (body) => {
 
     const request = body.request;
     const userId = body.session.sessionId;
-    const context = body.session.attributes;
     let extra = {};
     let text = '';
 
-    if (request.type === 'SessionEndedRequest') {
-        return {userId, text, extra: {sessionEnd: true}};
+    log.fatal('request.type', request.type);
+    if (request.type === 'System.ExceptionEncountered') {
+        text = '';
+    } else if (request.type === 'SessionEndedRequest') {
+        extra = {sessionEnd: true};
+    } else if (request.type === 'Alexa.Presentation.APL.UserEvent') {
+        text = request.arguments[0];
     } else if (request.type === 'IntentRequest' && request.intent.name === 'watson') {
-        log.fatal(request);
         if (request.intent && request.intent.slots &&
             request.intent.slots.speech && request.intent.slots.speech.value) {
             text = request.intent.slots.speech.value
+        }
+    }
+
+    if (body.session && body.session.attributes && body.session.attributes.conversationToken) {
+        const conversationToken = jwt.verify(body.session.attributes.conversationToken, jwtSecret);
+        extra = {...extra, context: conversationToken.context};
+        if (conversationToken.buttons && conversationToken.buttons[text.toLowerCase()]) {
+            const value = conversationToken.buttons[text.toLowerCase()];
+            const {text: t, ...others} = value.input;
+            return {userId, text: t, extra: {...extra, ...others}};
         }
     }
 
@@ -185,7 +214,7 @@ module.exports.alexa = async (req, res) => {
         await verifier(cert_url, signature, JSON.stringify(req.body));
         const input = formatInput(body);
         if (input.extra.sessionEnd) {
-            Assistant.deleteSessionId(input.userId);
+            await Assistant.deleteSessionId(input.userId);
             log.info('Destroying sesssion of %s', input.userId);
             res.send({});
         } else {
