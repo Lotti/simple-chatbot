@@ -13,7 +13,7 @@ const storeButtonInContext = (conversationToken, option) => {
     if (!conversationToken.buttons) {
         conversationToken.buttons = {};
     } // salvo i pulsanti nel conversation token
-    conversationToken.buttons[option.label] = option.value;
+    conversationToken.buttons[option.label.toLowerCase()] = option.value;
 };
 
 
@@ -52,7 +52,10 @@ const formatResponse = (response, googleBody) => {
         } else {
             richResponse.items.push({
                 simpleResponse: {
-                    textToSpeech: suggestion.suggestions.map((o) => o.label.trim()).join(', ').trim(),
+                    textToSpeech: suggestion.suggestions.map((o) => {
+                        storeButtonInContext(conversationToken, o);
+                        return o.label.trim();
+                    }).join(', ').trim(),
                     displayText: '',
                 },
             });
@@ -118,7 +121,6 @@ const formatResponse = (response, googleBody) => {
             if (capabilities.includes('actions.capability.SCREEN_OUTPUT')) {
                 addTextButtons = false;
                 richResponse.suggestions = option.options.map((o) => {
-                    storeButtonInContext(conversationToken, o);
                     return {
                         title: o.label
                     };
@@ -127,7 +129,10 @@ const formatResponse = (response, googleBody) => {
 
             const title = option.title || '';
             const description = option.description || '';
-            const buttons = addTextButtons ? '\n' + option.options.map((o) => o.label.trim()).join(', ').trim() : '';
+            const buttons = addTextButtons ? '\n' + option.options.map((o) => {
+                storeButtonInContext(conversationToken, o);
+                return o.label.trim();
+            }).join(', ').trim() : '';
 
             if (capabilities.includes('actions.capability.SCREEN_OUTPUT')
                 && simpleResponses >= maxSimpleResponses && basicCard < maxBasicCard) {
@@ -209,11 +214,11 @@ const formatInput = (body) => {
 
     if (body.conversation.conversationToken) {
         const conversationToken = jwt.verify(body.conversation.conversationToken, jwtSecret);
-        extra = {context: conversationToken.context};
+        extra = {...extra, context: conversationToken.context};
         if (conversationToken.buttons && conversationToken.buttons[text]) {
-            const value = conversationToken.buttons[text];
-            const {text: t, extra: e} = value.input;
-            return {userId, text: t, extra: {...extra, ...e}};
+            const value = conversationToken.buttons[text.toLowerCase()];
+            const {text: t, ...others} = value.input;
+            return {userId, text: t, extra: {...extra, ...others}};
         }
     }
 

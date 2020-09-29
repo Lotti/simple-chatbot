@@ -1,8 +1,22 @@
 const log4js = require('log4js');
 const log = log4js.getLogger('alexa');
-
+const assert = require('assert').strict;
+const jwt = require('jsonwebtoken');
 const verifier = require('alexa-verifier');
 const Assistant = require('../services/Assistant');
+
+
+assert(process.env.JWT_SECRET, 'Missing environment var JWT_SECRET');
+const jwtSecret = process.env.JWT_SECRET;
+
+
+const storeButtonInContext = (conversationToken, option) => {
+    if (!conversationToken.buttons) {
+        conversationToken.buttons = {};
+    } // salvo i pulsanti nel conversation token
+    conversationToken.buttons[option.label.toLowerCase()] = option.value;
+};
+
 
 const formatResponse = (response, alexaBody) => {
     let capabilities = [];
@@ -11,10 +25,9 @@ const formatResponse = (response, alexaBody) => {
         capabilities = Object.keys(alexaBody.context.System.device.supportedInterfaces);
     }
 
-    let context = {};
-    if (response.context && response.context.skills && response.context.skills['main skill']) {
-        context = response.context.skills['main skill'].user_defined;
-    }
+    const conversationToken = {
+        context: response.context.skills['main skill'].user_defined,
+    };
 
     let text = '';
     let title = undefined;
@@ -25,11 +38,14 @@ const formatResponse = (response, alexaBody) => {
     // disambiguazione: se c'è disambiguazione, ritorno solo questa
     const suggestion = response.output.generic.find((g) => g.response_type === 'suggestion');
     if (suggestion) {
-        text = suggestion.title.trim();
-        const buttons = suggestion.suggestions.map((o) => o.label.trim()).join(', ').trim();
+        text = suggestion.title;
+        const buttons = suggestion.suggestions.map((o) => {
+            storeButtonInContext(conversationToken, o);
+            return o.label.trim();
+        }).join(', ');
         if (capabilities.includes('Display')) {
             card = {
-                title: suggestion.title.trim(),
+                title: suggestion.title,
                 text: buttons,
             };
         } else {
@@ -38,9 +54,9 @@ const formatResponse = (response, alexaBody) => {
     } else {
 
         // testi
-        const texts = response.output.generic.filter((g) => g.response_type === 'text').map((g) => g.text.trim());
+        const texts = response.output.generic.filter((g) => g.response_type === 'text').map((g) => g.text);
         for (const t of texts) {
-            text+= `${text.length > 0 ? '\n': ''}${t}`.trim();
+            text+= `${text.length > 0 ? '\n': ''}${t}`;
         }
 
         // gestione immagini: trasformano una SimpleCard in StandardCard
@@ -61,7 +77,10 @@ const formatResponse = (response, alexaBody) => {
         if (option) {
             const title = option.title || '';
             const description = option.description || '';
-            const buttons = option.options.map((o) => o.label.trim()).join(', ').trim();
+            const buttons = option.options.map((o) => {
+                storeButtonInContext(conversationToken, o);
+                return o.label.trim();
+            }).join(', ');
 
             if (capabilities.includes('Display') && cards < maxCards) {
                 cards++;
@@ -70,9 +89,9 @@ const formatResponse = (response, alexaBody) => {
                     text: description.trim() + '\n' + buttons,
                 };
             } else {
-                text+= `${text.length > 0 ? '\n': ''}${title}`.trim();
-                text+= `${text.length > 0 ? '\n': ''}${description}`.trim();
-                text+= `${text.length > 0 ? '\n': ''}${buttons}`.trim();
+                text+= `${text.length > 0 ? '\n': ''}${title}`;
+                text+= `${text.length > 0 ? '\n': ''}${description}`;
+                text+= `${text.length > 0 ? '\n': ''}${buttons}`;
             }
         }
 
@@ -96,7 +115,9 @@ const formatResponse = (response, alexaBody) => {
 
     const output = {
         version: '1.0',
-        sessionAttributes: context,
+        sessionAttributes: {
+            conversationToken: jwt.sign(conversationToken, jwtSecret),
+        },
         response: {
             outputSpeech: {
                 type: 'PlainText',
@@ -158,17 +179,26 @@ const formatInput = (body) => {
 
     const request = body.request;
     const userId = body.session.sessionId;
-    const context = body.session.attributes;
     let extra = {};
     let text = '';
 
+    log.fatal('request.type', request.type);
     if (request.type === 'SessionEndedRequest') {
-        return {userId, text, extra: {sessionEnd: true}};
+        extra = {sessionEnd: true};
     } else if (request.type === 'IntentRequest' && request.intent.name === 'watson') {
-        log.fatal(request);
         if (request.intent && request.intent.slots &&
             request.intent.slots.speech && request.intent.slots.speech.value) {
             text = request.intent.slots.speech.value
+        }
+    }
+
+    if (body.session.attributes.conversationToken) {
+        const conversationToken = jwt.verify(body.session.attributes.conversationToken, jwtSecret);
+        extra = {...extra, context: conversationToken.context};
+        if (conversationToken.buttons && conversationToken.buttons[text.toLowerCase()]) {
+            const value = conversationToken.buttons[text];
+            const {text: t, ...others} = value.input;
+            return {userId, text: t, extra: {...extra, ...others}};
         }
     }
 
@@ -185,7 +215,7 @@ module.exports.alexa = async (req, res) => {
         await verifier(cert_url, signature, JSON.stringify(req.body));
         const input = formatInput(body);
         if (input.extra.sessionEnd) {
-            Assistant.deleteSessionId(input.userId);
+            await Assistant.deleteSessionId(input.userId);
             log.info('Destroying sesssion of %s', input.userId);
             res.send({});
         } else {
