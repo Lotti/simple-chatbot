@@ -1,3 +1,10 @@
+/**
+ *
+ * @param {string} title
+ * @param {string} description
+ * @param {string[]} buttons
+ * @returns {{document: {mainTemplate: {parameters: [string], items: [{type: string, items: []}]}, description: string, type: string, version: string}, type: string, token: string}}
+ */
 module.exports.audioTemplate = (title, description, buttons) => {
     const audioItems = [];
 
@@ -61,9 +68,33 @@ module.exports.audioTemplate = (title, description, buttons) => {
     };
 };
 
-module.exports.displayTemplate = (title, description, buttons, image) => {
+/**
+ *
+ * @param {{pixelWidth: number, pixelHeight: number}} viewPort
+ * @param {string} title
+ * @param {string} description
+ * @param {string[]} buttons
+ * @param {string} image
+ * @param {string} theme
+ * @returns {{document: {import: [{name: string, version: string}], mainTemplate: {parameters: [string], items: [{paddingBottom: string, paddingRight: string, width: string, paddingTop: string, type: string, paddingLeft: string, items: [], justifyContent: string, direction: string, height: string}]}, description: string, theme: string, type: string, version: string}, type: string, token: string}}
+ */
+module.exports.displayTemplate = (viewPort, title, description, buttons, image, theme = 'dark') => {
     let displayItems = [];
     let titleItem, descriptionItem, buttonsItem, imageItem;
+
+    // define content height value
+    let contentHeight = '28vh'; // small screens
+    let titleSize = '28dp';
+    let descriptionSize = '22dp';
+    if (viewPort.pixelHeight >= 750) { // large screens
+        contentHeight = '50vh';
+        titleSize = '40dp';
+        descriptionSize = '30dp';
+    } else if (viewPort.pixelHeight >= 600) { // medium screens
+        contentHeight = '40vh';
+        titleSize = '35dp';
+        descriptionSize = '25dp';
+    }
 
     // creating display items
 
@@ -73,20 +104,26 @@ module.exports.displayTemplate = (title, description, buttons, image) => {
             width: "auto",
             height: "auto",
             text: title,
-            fontSize: "40dp",
+            fontSize: titleSize,
+            maxLines: 3,
         };
     }
 
     if (description && description.length > 0) {
         descriptionItem = {
-            type: "Text",
-            width: "auto",
-            height: "auto",
+            type: "ScrollView",
+            width: "100%",
+            height: contentHeight,
             shrink: 1,
             grow: 1,
-            text: description,
-            fontSize: "30dp",
             paddingRight: "@spacingSmall",
+            item: {
+                type: "Text",
+                width: "100%",
+                height: "auto",
+                text: description,
+                fontSize: descriptionSize,
+            }
         };
     }
 
@@ -103,6 +140,7 @@ module.exports.displayTemplate = (title, description, buttons, image) => {
                 buttonText: "${data}",
                 buttonStyle: "contained",
                 accessibilityLabel: "${data}",
+                theme: theme,
                 primaryAction: [{type: "SendEvent", arguments: ["${data}"]}],
             },
         };
@@ -112,11 +150,12 @@ module.exports.displayTemplate = (title, description, buttons, image) => {
         imageItem = {
             type: "AlexaImage",
             imageSource: image,
-            imageScale: "best-fit",
+            imageScale: "best-fill",
             imageAlignment: "center",
             imageAspectRatio: "square",
             imageBlurredBackground: true,
             imageRoundedCorner: true,
+            imageHeight: contentHeight,
         };
     }
 
@@ -156,7 +195,7 @@ module.exports.displayTemplate = (title, description, buttons, image) => {
         document: {
             type: 'APL',
             version: '1.4',
-            theme: 'dark',
+            theme: theme,
             description: 'display template: title, text, button, image',
             import: [{name: 'alexa-layouts', version: '1.2.0'}],
             mainTemplate: {
@@ -167,6 +206,7 @@ module.exports.displayTemplate = (title, description, buttons, image) => {
                         direction: "column",
                         height: "100%",
                         width: "100%",
+                        alignItems: "start",
                         paddingTop: "@spacingSmall",
                         paddingRight: "@spacingSmall",
                         paddingBottom: "@spacingSmall",

@@ -9,7 +9,7 @@ Server is made with Node.js. Client is made with React and ant.design framework.
 - npm run build-client: compile react client code
 - more commands defined in package.json
 
-# Work with Docker
+# Run with Docker
 
 To run the sample chatbot app with Docker
 
@@ -19,6 +19,7 @@ To run the sample chatbot app with Docker
 ASSISTANT_URL='...'
 ASSISTANT_APIKEY='...'
 ASSISTANT_ID='...'
+JWT_SECRET='...'
 ```
 
 * Run the following command to build and run the Docker

@@ -23,9 +23,11 @@ const storeButtonInContext = (conversationToken, option) => {
 
 const formatResponse = (response, alexaBody) => {
     let capabilities = [];
+    let viewPort = {};
 
     if (alexaBody && alexaBody.context && alexaBody.context.System) {
         capabilities = Object.keys(alexaBody.context.System.device.supportedInterfaces);
+        viewPort = alexaBody.context.Viewport;
     }
 
     const conversationToken = {
@@ -136,7 +138,7 @@ const formatResponse = (response, alexaBody) => {
     };
     if (capabilities.includes('Alexa.Presentation.APL')) {
         output.response.directives = [
-            displayTemplate(aplTitle, aplDescription, aplButtons, aplImage),
+            displayTemplate(viewPort, aplTitle, aplDescription, aplButtons, aplImage),
             audioTemplate(aplTitle, aplDescription, aplButtons)
         ];
     } else {
@@ -159,7 +161,7 @@ const formatResponse = (response, alexaBody) => {
         output.response.reprompt = {
             outputSpeech: {
                 type: "PlainText",
-                text: text,
+                text: text.length > 0 ? text : title,
                 playBehavior: 'ENQUEUE',
             }
         };
