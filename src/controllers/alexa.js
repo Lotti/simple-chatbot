@@ -225,6 +225,7 @@ module.exports.alexa = async (req, res) => {
 
         if (input.extra.sessionEnd || input.extra.reply) {
             res.send(input.extra.reply || {});
+            return;
         }
 
         log.info('Received message from %s: %s %j', input.userId, input.text || '(empty)', input.extra);
