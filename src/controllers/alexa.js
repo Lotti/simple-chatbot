@@ -5,8 +5,7 @@ const jwt = require('jsonwebtoken');
 const verifier = require('alexa-verifier');
 const Assistant = require('../services/Assistant');
 
-const {audioTemplate, displayTemplate} = require('../libraries/alexaTemplates');
-
+const {audioTemplate, displayTemplate, quitResponse} = require('../libraries/alexaTemplates');
 
 assert(process.env.JWT_SECRET, 'Missing environment var JWT_SECRET');
 const jwtSecret = process.env.JWT_SECRET;
@@ -186,8 +185,12 @@ const formatInput = (body) => {
         extra = {sessionEnd: true};
     } else if (request.type === 'Alexa.Presentation.APL.UserEvent') {
         text = request.arguments[0];
-    } else if (request.type === 'IntentRequest' && request.intent.name === 'watson') {
-        if (request.intent && request.intent.slots &&
+    } else if (request.type === 'IntentRequest') {
+        if (['AMAZON.StopIntent', 'AMAZON.CancelIntent', 'AMAZON.NavigateHomeIntent'].includes(request.intent.name)) {
+            extra = {sessionEnd: true, reply: quitResponse()};
+        } else if (request.intent.name === 'AMAZON.HelpIntent') {
+            text = 'cosa sai fare?'
+        } else if (request.intent && request.intent.name === 'watson' && request.intent.slots &&
             request.intent.slots.speech && request.intent.slots.speech.value) {
             text = request.intent.slots.speech.value
         }
@@ -218,13 +221,16 @@ module.exports.alexa = async (req, res) => {
         if (input.extra.sessionEnd) {
             await Assistant.deleteSessionId(input.userId);
             log.info('Destroying sesssion of %s', input.userId);
-            res.send({});
-        } else {
-            log.info('Received message from %s: %s %j', input.userId, input.text || '(empty)', input.extra);
-            const r = await Assistant.sendMessage(input.userId, input.text, input.extra)
-            log.info('Answering with messages to %s: %j', input.userId, r);
-            res.send(formatResponse(r, body));
         }
+
+        if (input.extra.sessionEnd || input.extra.reply) {
+            res.send(input.extra.reply || {});
+        }
+
+        log.info('Received message from %s: %s %j', input.userId, input.text || '(empty)', input.extra);
+        const r = await Assistant.sendMessage(input.userId, input.text, input.extra)
+        log.info('Answering with messages to %s: %j', input.userId, r);
+        res.send(formatResponse(r, body));
     } catch (error) {
         log.error('ERROR', error);
         res.status(500).send(error);

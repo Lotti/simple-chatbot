@@ -1,3 +1,6 @@
+const Chance = require('chance');
+const chance = new Chance();
+
 /**
  *
  * @param {string} title
@@ -218,4 +221,26 @@ module.exports.displayTemplate = (viewPort, title, description, buttons, image, 
             }
         }
     };
+};
+
+module.exports.quitResponse = () => {
+    const byeReplies = [
+        'Ciao!',
+        'Alla prossima!',
+        'Arrivederci!',
+        'Ci sentiamo!'
+    ];
+
+    return {
+        version: '1.0',
+        sessionAttributes: {},
+        response: {
+            shouldEndSession: true,
+            outputSpeech: {
+                type: 'PlainText',
+                text: chance.pickone(byeReplies),
+                playBehavior: 'REPLACE_ALL',
+            },
+        },
+    }
 };
