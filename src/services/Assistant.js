@@ -127,6 +127,13 @@ class Assistant {
                         return_context: true,
                     }
                 },
+                context: {
+                    global: {
+                        system: {
+                            user_id: userId,
+                        }
+                    },
+                },
             };
             if (extra.suggestion_id) {
                 options.input.suggestion_id = extra.suggestion_id;
@@ -151,19 +158,17 @@ class Assistant {
                     }
                 }
 
-                options.context = {
-                    skills: {
-                        ['main skill']: {
-                            user_defined: extra.context
-                        }
-                    }
+                options.context.skills = {
+                    ['main skill']: {
+                        user_defined: extra.context,
+                    },
                 };
             }
 
             return this._responseManipulation((await this.service.message(options)).result);
         } catch (error) {
             log.error(error);
-            let text = 'Impossibile contattare Watson Assistant, provare di più tardi.';
+            let text = 'Impossibile contattare Watson Assistant, provare più tardi.';
             if (error.message === 'Invalid Session') {
                 text = 'Sessione scaduta';
                 await this.deleteSessionId(userId);

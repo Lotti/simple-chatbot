@@ -1,0 +1,28 @@
+{
+  "locale": "it",
+  "actions": [
+    {
+      "description": "Watson Assistant for Google Assistant",
+      "name": "MAIN",
+      "intent": {
+        "name": "actions.intent.MAIN",
+        "trigger": {
+          "queryPatterns": [
+            "watson"
+          ]
+        }
+      },
+      "fulfillment": {
+        "conversationName": "Watson"
+      }
+    }
+  ],
+  "conversations": {
+    "Watson": {
+      "name": "Watson",
+      "url": "https://valerio-simple-chatbot-test.eu-de.mybluemix.net/api/google-assistant",
+      "fulfillmentApiVersion": 2,
+      "in_dialog_intents": []
+    }
+  }
+}

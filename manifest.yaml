@@ -1,11 +1,11 @@
 applications:
-- name: valerio-simple-chatbot
+- name: ((APP_NAME))
   command: npm start
   disk_quota: 1G
   instances: 1
   memory: 256M
   routes:
-    - route: valerio-simple-chatbot.eu-de.mybluemix.net
+    - route: ((APP_NAME)).eu-de.mybluemix.net
   buildpacks:
     - sdk-for-nodejs
   health-check-type: process

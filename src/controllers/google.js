@@ -85,7 +85,7 @@ const formatResponse = (response, googleBody) => {
             }
         }
         for (const text of simpleTexts) {
-            if (simpleResponses < maxSimpleResponses) {
+            if (simpleResponses < maxSimpleResponses && text.length > 0) {
                 simpleResponses++;
                 richResponse.items.push({
                     simpleResponse: {
@@ -102,13 +102,29 @@ const formatResponse = (response, googleBody) => {
             if (img) {
                 if (basicCard < maxBasicCard) {
                     basicCard++;
+
+                    let titleSet = false;
+
+                    if (simpleResponses === 0) {
+                        simpleResponses++;
+                        titleSet = true;
+                        richResponse.items.push({
+                            simpleResponse: {
+                                textToSpeech: img.title,
+                                displayText: img.title,
+                            },
+                        });
+                    }
+
                     richResponse.items.push({
                         basicCard: {
-                            title: img.title,
+                            title: !titleSet ? img.title : undefined,
                             formattedText: img.description,
                             image: {
                                 url: img.source,
-                            }
+                                accessibility_text: img.description,
+                            },
+                            imageDisplayOptions: "CROPPED",
                         },
                     });
                 }
@@ -146,12 +162,14 @@ const formatResponse = (response, googleBody) => {
                 });
             } else if (simpleResponses < maxSimpleResponses) {
                 simpleResponses++;
-                richResponse.items.push({
-                    simpleResponse: {
-                        textToSpeech: title.trim() + buttons,
-                        displayText: (title + '\n' + description).trim(),
-                    },
-                });
+                if ((title.trim() + buttons).length > 0) {
+                    richResponse.items.push({
+                        simpleResponse: {
+                            textToSpeech: title.trim() + buttons,
+                            displayText: (title + '\n' + description).trim(),
+                        },
+                    });
+                }
             }
         }
 
