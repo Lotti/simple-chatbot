@@ -1,4 +1,4 @@
- # Simple chatbot
+# Simple chatbot
 
 Server is made with Node.js. Client is made with React and ant.design framework. It uses Watson Assistant to deliver chatbot functionality.
 
@@ -13,7 +13,7 @@ Server is made with Node.js. Client is made with React and ant.design framework.
 
 To run the sample chatbot app with Docker
 
-* Create a Docker.env file containing the following variables:
+- Create a Docker.env file containing the following variables:
 
 ```
 ASSISTANT_URL='...'
@@ -22,9 +22,11 @@ ASSISTANT_ID='...'
 JWT_SECRET='...'
 ```
 
-* Run the following command to build and run the Docker
+- Run the following command to build and run the Docker
+
 ```
 docker build -t chatbot .
 docker run --env-file ./Docker.env -p 8080:3000 chatbot
 ```
-* Open the url http://localhost:8080
+
+- Open the url http://localhost:8080

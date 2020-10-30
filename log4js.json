@@ -16,7 +16,7 @@
       "backups": 5,
       "compress": true
     },
-    "multiFile" : {
+    "multiFile": {
       "type": "multiFile",
       "layout": {
         "type": "basic"

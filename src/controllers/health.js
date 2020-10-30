@@ -1,3 +1,3 @@
 module.exports.health = (_, res) => {
-    res.send({status: 'UP'});
+  res.send({ status: `UP` });
 };

@@ -8,11 +8,7 @@ Docker.env
 # Dependencies
 node_modules/
 
-# Coverage
-coverage/
-
 # Transpiled files
-/client/build/
 /public
 
 # VS Code
@@ -31,5 +27,6 @@ coverage/
 /output/*
 !output/.gitkeep
 
+/client
 /.env
 /manifest-params*.yaml

@@ -19,7 +19,7 @@
     "start": "node main.js",
     "watch": "nodemon -r dotenv/config main.js",
     "install-all": "npm install && npm run install-client",
-    "lint": "eslint --fix .",
+    "lint": "npx prettier --write .",
     "pretest": "npm run lint",
     "push": "bx cf push -f manifest.yaml --vars-file manifest-params.yaml",
     "push-prod": "bx cf push -f manifest.yaml --vars-file manifest-params-prod.yaml",
@@ -43,7 +43,7 @@
     "oas-tools": "^2.1.8"
   },
   "devDependencies": {
-    "eslint": "^7.11.0",
-    "nodemon": "^2.0.6"
+    "nodemon": "^2.0.6",
+    "prettier": "^2.1.2"
   }
 }

@@ -13,10 +13,12 @@
       "name": "BUY",
       "intent": {
         "name": "com.example.ExampleAction.BUY",
-        "parameters": [{
-          "name": "color",
-          "type": "org.schema.type.Color"
-        }],
+        "parameters": [
+          {
+            "name": "color",
+            "type": "org.schema.type.Color"
+          }
+        ],
         "trigger": {
           "queryPatterns": [
             "find some $org.schema.type.Color:color sneakers",

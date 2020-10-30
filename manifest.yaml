@@ -1,18 +1,18 @@
 applications:
-- name: ((APP_NAME))
-  command: npm start
-  disk_quota: 1G
-  instances: 1
-  memory: 256M
-  routes:
-    - route: ((APP_NAME)).eu-de.mybluemix.net
-  buildpacks:
-    - sdk-for-nodejs
-  health-check-type: process
-  env:
-    NODE_ENV: 'production'
-    NODE_MODULES_CACHE: 'true'
-    ASSISTANT_URL: ((ASSISTANT_URL))
-    ASSISTANT_APIKEY: ((ASSISTANT_APIKEY))
-    ASSISTANT_ID: ((ASSISTANT_ID))
-    JWT_SECRET: ((JWT_SECRET))
+  - name: ((APP_NAME))
+    command: npm start
+    disk_quota: 1G
+    instances: 1
+    memory: 256M
+    routes:
+      - route: ((APP_NAME)).eu-de.mybluemix.net
+    buildpacks:
+      - sdk-for-nodejs
+    health-check-type: process
+    env:
+      NODE_ENV: 'production'
+      NODE_MODULES_CACHE: 'true'
+      ASSISTANT_URL: ((ASSISTANT_URL))
+      ASSISTANT_APIKEY: ((ASSISTANT_APIKEY))
+      ASSISTANT_ID: ((ASSISTANT_ID))
+      JWT_SECRET: ((JWT_SECRET))

@@ -169,7 +169,7 @@ components:
           type: object
       example:
         text: ciao
-        userId: "12345"
+        userId: '12345'
 
     googleAssistantModel:
       type: object
