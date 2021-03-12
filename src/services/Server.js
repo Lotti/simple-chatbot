@@ -73,7 +73,7 @@ class Server {
 
     // SWAGGER
     const spec = fs.readFileSync(path.join(process.cwd(), `api.yaml`), `utf8`);
-    this.oasDoc = jsyaml.safeLoad(spec);
+    this.oasDoc = jsyaml.load(spec);
 
     const swaggerLogger = log4js.getLogger(`swagger`);
     swaggerLogger.warning = swaggerLogger.warn;

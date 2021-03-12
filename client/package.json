@@ -15,12 +15,12 @@
     "lint": "npx prettier --write ."
   },
   "dependencies": {
-    "@ant-design/icons": "^4.2.2",
-    "@fortawesome/fontawesome-svg-core": "^1.2.32",
-    "@fortawesome/free-solid-svg-icons": "^5.15.1",
-    "@fortawesome/react-fontawesome": "^0.1.12",
-    "antd": "^4.7.3",
-    "dayjs": "^1.9.4",
+    "@ant-design/icons": "^4.5.0",
+    "@fortawesome/fontawesome-svg-core": "^1.2.34",
+    "@fortawesome/free-solid-svg-icons": "^5.15.2",
+    "@fortawesome/react-fontawesome": "^0.1.14",
+    "antd": "^4.13.1",
+    "dayjs": "^1.10.4",
     "default-passive-events": "^2.0.0",
     "es6-promise": "^4.2.8",
     "immutable": "^4.0.0-rc.12",
@@ -35,16 +35,16 @@
     "redux-logger": "^3.0.6",
     "redux-thunk": "^2.3.0",
     "url-search-params-polyfill": "^8.1.0",
-    "uuid": "^8.3.1"
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@craco/craco": "^5.7.0",
     "babel-cli": "^6.26.0",
-    "babel-plugin-import": "^1.13.1",
-    "craco-less": "^1.17.0",
-    "prettier": "^2.1.2",
-    "react-scripts": "^4.0.0",
-    "source-map-explorer": "^2.5.0"
+    "babel-plugin-import": "^1.13.3",
+    "craco-less": "^1.17.1",
+    "prettier": "^2.2.1",
+    "react-scripts": "^4.0.3",
+    "source-map-explorer": "^2.5.2"
   },
   "browserslist": [
     ">0.2%",
