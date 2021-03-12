@@ -32,7 +32,7 @@ class Assistant {
 
     this.service = new AssistantV2({
       authenticator: authenticator,
-      url: process.env.ASSISTANT_URL,
+      serviceUrl: process.env.ASSISTANT_URL,
       version: `2020-04-01`,
       headers: {
         'X-Watson-Learning-Opt-Out': `true`,
