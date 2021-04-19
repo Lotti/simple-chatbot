@@ -47,15 +47,13 @@ class ChatWidget extends React.Component {
 
   submitMessage = (value) => {
     const { latestMessages } = this.state;
-    const { sendMessage } = this.props;
+    const { sendMessage, setText } = this.props;
 
-    if (this.textAreaButton.current) {
-      if (value.length > 0) {
-        value = value.trim();
-        this.textAreaButton.current.setValue('');
-        this.setState({ latestMessages: [].concat([value], latestMessages) });
-        sendMessage(value);
-      }
+    if (value.length > 0) {
+      value = value.trim();
+      setText('');
+      this.setState({ latestMessages: [].concat([value], latestMessages) });
+      sendMessage(value);
     }
   };
 
@@ -71,13 +69,7 @@ class ChatWidget extends React.Component {
   };
 
   render() {
-    const {
-      messages,
-      loading,
-      showInputArea,
-      fixedAnswers,
-      botName,
-    } = this.props;
+    const {messages, loading, showInputArea, fixedAnswers, botName, setText} = this.props;
 
     return (
       <React.Fragment>
@@ -87,21 +79,13 @@ class ChatWidget extends React.Component {
             itemLayout="vertical"
             dataSource={messages}
             renderItem={(m) => <ChatBalloon message={m} />}>
-            {loading && (
-              <div className="spinner">
-                <Spin size="large" />
-              </div>
-            )}
+            {loading && (<div className="spinner"><Spin size="large" /></div>)}
           </List>
         </div>
         {fixedAnswers && fixedAnswers.length > 0 && (
           <div className="fixed-answers">
             {fixedAnswers.map((a, i) => (
-              <Tag
-                key={'fa-' + i}
-                className="fixed-answer"
-                color="#004280"
-                onClick={this.submitFixedAnswer(a.value)}>
+              <Tag key={'fa-' + i} className="fixed-answer" color="#004280" onClick={this.submitFixedAnswer(a.value)}>
                 {a.label}
               </Tag>
             ))}
@@ -128,11 +112,9 @@ class ChatWidget extends React.Component {
 
               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                 if (latestMessages[latestPointer]) {
-                  this.textAreaButton.current.setValue(
-                    latestMessages[latestPointer]
-                  );
+                  setText(latestMessages[latestPointer]);
                 } else {
-                  this.textAreaButton.current.setValue('');
+                  setText('');
                 }
               }
             }}
@@ -176,6 +158,7 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
+    setText: (...args) => dispatch(actions.setText(...args)),
     setScroll: (...args) => dispatch(actions.setScroll(...args)),
     scrollToBottom: (...args) => dispatch(actions.scrollToBottom(...args)),
   };

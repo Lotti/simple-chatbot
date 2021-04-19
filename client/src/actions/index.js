@@ -1,6 +1,10 @@
 import * as actions from '../constants/ActionTypes';
 import { newMsg } from '../constants';
 
+export function setText(text) {
+  return {type: actions.SET_TEXT, text};
+}
+
 export function setFocus(reference) {
   return { type: actions.SET_FOCUS, reference };
 }

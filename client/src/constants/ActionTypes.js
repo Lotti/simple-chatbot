@@ -1,5 +1,6 @@
 export const ADD_MESSAGES = 'ADD_MESSAGES';
 export const RESET_SESSION = 'RESET_SESSION';
+export const SET_TEXT = 'SET_TEXT';
 export const SET_FOCUS = 'SET_FOCUS';
 export const GET_FOCUS = 'GET_FOCUS';
 export const SET_SCROLL = 'SET_SCROLL';
