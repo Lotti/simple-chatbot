@@ -93,17 +93,13 @@ export function sendMessage(input) {
           // assistant new response format
           for (const g of json.output.generic) {
             if (g.response_type === 'pause') {
-              dispatch(
-                addMessages(newMsg(index, '', { type: g.response_type, ...g }))
-              );
+              dispatch(addMessages(newMsg(index, '', { type: g.response_type, ...g })));
               await sleep(g.time);
             } else if (g.response_type === 'text') {
               dispatch(addMessages(newMsg(index, g.text)));
               await sleep(250);
             } else {
-              dispatch(
-                addMessages(newMsg(index, '', { type: g.response_type, ...g }))
-              );
+              dispatch(addMessages(newMsg(index, '', { type: g.response_type, ...g })));
               await sleep(250);
             }
           }
