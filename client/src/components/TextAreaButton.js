@@ -24,7 +24,7 @@ class TextAreaButton extends React.Component {
       return true;
     } else if (this.props.className !== nextProps.className) {
       return true;
-    } else if (this.state.text !== nextProps.text) {
+    } else if (this.props.value !== nextProps.value) {
       return true;
     }
 
@@ -35,9 +35,7 @@ class TextAreaButton extends React.Component {
     const {reference, setFocus} = this.props;
     const ref = reference || this.textArea;
 
-    if (setFocus) {
-      setFocus(ref);
-    }
+    setFocus(ref);
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -60,12 +58,10 @@ class TextAreaButton extends React.Component {
       buttonType,
       setFocus,
       onPressEnter,
-      setText,
-      text,
+      setValue,
+      value,
       ...textProps
     } = this.props;
-
-    const {value} = this.state;
 
     let cName = 'chatInputArea';
     if (className.length > 0) {
@@ -79,18 +75,18 @@ class TextAreaButton extends React.Component {
       <div className={cName}>
         <Row gutter={0}>
           <Col xs={18} md={20} lg={22}>
-            <Input.TextArea {...textProps} ref={ref} className="chatInput" value={text} disabled={textDisabled}
-              onChange={(e) => setText(e.target.value)}
-              onKeyUp={(event) => {
-                if (event.keyCode === 13) {
-                  onPressEnter(event);
-                }
-              }}
+            <Input.TextArea {...textProps} ref={ref} className="chatInput" value={value} disabled={textDisabled}
+                            onChange={(e) => setValue(e.target.value)}
+                            onKeyUp={(event) => {
+                              if (event.keyCode === 13) {
+                                onPressEnter(event);
+                              }
+                            }}
             />
           </Col>
           <Col xs={6} md={4} lg={2}>
             <Button className="sendButton" type={buttonType} icon={buttonIcon} disabled={disabled} loading={loading}
-              onClick={() => buttonOnClick(text)}
+                    onClick={() => buttonOnClick(text)}
             />
           </Col>
         </Row>
@@ -123,13 +119,13 @@ class TextAreaButton extends React.Component {
 
 function mapStateToProps(state) {
   return {
-    text: state.events.text,
+    value: state.events.text,
   };
 }
 
 function mapDispatchToProps(dispatch) {
   return {
-    setText: (...args) => dispatch(actions.setText(...args)),
+    setValue: (...args) => dispatch(actions.setText(...args)),
     setFocus: (...args) => dispatch(actions.setFocus(...args)),
   };
 }
