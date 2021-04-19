@@ -11,7 +11,6 @@ const compression = require(`compression`);
 const errorhandler = require(`errorhandler`);
 const oasTools = require(`oas-tools`);
 const jsyaml = require(`js-yaml`);
-const { IpDeniedError, IpFilter } = require(`express-ipfilter`);
 
 const basicAuthUsername = process.env.BASIC_AUTH_USERNAME || false;
 const basicAuthPassword = process.env.BASIC_AUTH_PASSWORD || false;
@@ -30,10 +29,6 @@ class Server {
     this.app.set(`port`, this.port);
     this.app.use(bodyParser.json({ strict: false, limit: `10mb` }));
     this.app.use(compression());
-    if (process.env.IPFILTERING && process.env.IPFILTERING.length > 0) {
-      const ips = process.env.IPFILTERING.split(`,`);
-      this.app.use(IpFilter(ips, { mode: `allow` }));
-    }
 
     this.httpServer = http.createServer(this.app);
     // this.httpsServer = https.createServer(options, this.app);
